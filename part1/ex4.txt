@@ -1,0 +1,2 @@
+docker run -it -d --name testi ubuntu sh -c 'echo "Input website:"; read website; echo "Searching.."; sleep 1; echo $website; curl http://$website;'
+docker exec -it testi apt-get install curl
