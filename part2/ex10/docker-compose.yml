@@ -1,0 +1,60 @@
+# To get all the buttons to work, I changed the REQUEST_ORIGIN env variable
+# http://localhost from http://localhost:5000, since the request origin changed
+# with the nginx addition
+
+version: '3'
+
+services:
+  redis:
+    image: redis
+    networks:
+      - example-network
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+    networks:
+      - example-network
+
+  backend:
+    build:
+      context: ~/devopswithdocker/material-applications
+      dockerfile: ~/devopswithdocker/material-applications/example-backend/Dockerfile
+    ports:
+      - 8080:8080
+    environment:
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=db
+      - POSTGRES_PASSWORD=example
+      - REQUEST_ORIGIN=http://localhost
+    depends_on:
+      - db
+    networks:
+      - example-network
+
+  frontend:
+    build:
+      context: ~/devopswithdocker/material-applications
+      dockerfile: ~/devopswithdocker/material-applications/example-frontend/Dockerfile
+    ports:
+      - 5000:5000
+    networks:
+      - example-network
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - /var/run/docker.sock:/tmp/docker.sock
+    ports:
+      - 80:80
+    networks:
+      - example-network
+    depends_on:
+      - backend
+      - frontend
+
+networks:
+  example-network:
